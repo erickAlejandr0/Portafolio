@@ -1,0 +1,648 @@
+---
+// Explorador de arquitectura del SVD. Dibujo propio a partir de las figuras del anteproyecto
+// (contenedores C4 nivel 2, secuencia, modelo de datos y despliegue).
+type Kind = 'aws' | 'store' | 'ai' | 'ext' | 'sec';
+
+const W = 148;
+const H = 66;
+const EW = 148;
+const STEP = 182;
+const col = [0, 1, 2, 3, 4].map((i) => 205 + i * STEP);
+const row = { r1: 165, r2: 272, r3: 379, r4: 486 };
+
+const colors: Record<Kind, string> = {
+  aws: '#668BC4',
+  store: '#7F9FD0',
+  ai: '#8FB0DA',
+  ext: '#8E9299',
+  sec: '#6FB38F',
+};
+
+type Node = { id: string; x: number; y: number; w?: number; title: string; sub: string; kind: Kind };
+
+const nodes: Node[] = [
+  // Externos
+  { id: 'retool', x: col[0], y: 18, title: 'Retool Cloud', sub: 'revisión manual', kind: 'ext', w: EW },
+  { id: 'claude', x: col[2], y: 18, title: 'Claude', sub: 'Haiku y Sonnet', kind: 'ai', w: EW },
+  { id: 'app', x: 14, y: 214, title: 'App Panalogix', sub: 'React Native, Expo', kind: 'ext', w: EW },
+  { id: 'backend', x: 1124, y: row.r2, title: 'Panalogix', sub: 'DigitalOcean', kind: 'ext', w: EW },
+  { id: 'grafana', x: 1124, y: 594, title: 'Grafana Cloud', sub: 'dashboards', kind: 'ext', w: EW },
+  // Dentro de AWS
+  { id: 'apigw', x: col[0], y: row.r1, title: 'API Gateway', sub: '+ Lambda Api', kind: 'aws' },
+  { id: 'dlq', x: col[1], y: row.r1, title: 'Cola de fallos', sub: 'tras 3 intentos', kind: 'aws' },
+  { id: 's3', x: col[0], y: row.r2, title: 'S3 originales', sub: 'subida directa', kind: 'store' },
+  { id: 'sqs', x: col[1], y: row.r2, title: 'SQS', sub: 'cola de trabajo', kind: 'aws' },
+  { id: 'worker', x: col[2], y: row.r2, title: 'Lambda Worker', sub: 'Python 3.12', kind: 'aws' },
+  { id: 'sns', x: col[3], y: row.r2, title: 'SNS', sub: 'resultado', kind: 'aws' },
+  { id: 'webhook', x: col[4], y: row.r2, title: 'Webhook', sub: 'Lambda firmada', kind: 'aws' },
+  { id: 's3v', x: col[0], y: row.r3, title: 'S3 verificados', sub: 'docs aprobados', kind: 'store' },
+  { id: 'rds', x: col[2], y: row.r3, title: 'RDS PostgreSQL', sub: 'subred privada', kind: 'store' },
+  { id: 'wdlq', x: col[4], y: row.r3, title: 'Cola de fallos', sub: 'del webhook', kind: 'aws' },
+  { id: 'eb', x: col[1], y: row.r4, title: 'EventBridge', sub: 'cron diario', kind: 'aws' },
+  { id: 'alertas', x: col[2], y: row.r4, title: 'Lambda Alertas', sub: 'vencimientos', kind: 'aws' },
+];
+
+const n = Object.fromEntries(nodes.map((k) => [k.id, k]));
+const wOf = (id: string) => n[id].w ?? W;
+const L = (id: string) => n[id].x;
+const R = (id: string) => n[id].x + wOf(id);
+const CX = (id: string) => n[id].x + wOf(id) / 2;
+const T0 = (id: string) => n[id].y;
+const B = (id: string) => n[id].y + H;
+const CY = (id: string) => n[id].y + H / 2;
+
+const strip = [
+  { id: 'kms', title: 'KMS', sub: 'cifra datos personales' },
+  { id: 'ssm', title: 'SSM Parameter Store', sub: 'secretos al ejecutar' },
+  { id: 'iam', title: 'IAM', sub: 'mínimo privilegio' },
+  { id: 'xray', title: 'X-Ray', sub: 'trazas' },
+  { id: 'cw', title: 'CloudWatch', sub: 'logs y métricas' },
+];
+const SW = 165;
+const SS = 177;
+const SY = 598;
+const stripRight = 205 + 4 * SS + SW;
+
+type Edge = { id: string; d: string; dashed?: boolean; both?: boolean };
+const gx = CX('worker') - 36; // salida de la lectura de S3, a la izquierda del eje del Worker
+const edges: Edge[] = [
+  { id: 'app-apigw', d: `M${CX('app')},${T0('app')} V${CY('apigw')} H${L('apigw')}` },
+  { id: 'app-s3', d: `M${CX('app')},${B('app')} V${CY('s3')} H${L('s3')}`, dashed: true },
+  { id: 'retool-apigw', d: `M${CX('retool')},${B('retool')} V${T0('apigw')}` },
+  { id: 's3-sqs', d: `M${R('s3')},${CY('s3')} H${L('sqs')}` },
+  { id: 'sqs-dlq', d: `M${CX('sqs')},${T0('sqs')} V${B('dlq')}`, dashed: true },
+  { id: 'sqs-worker', d: `M${R('sqs')},${CY('sqs')} H${L('worker')}` },
+  { id: 'worker-s3', d: `M${gx},${B('worker')} V${B('worker') + 24} H${CX('s3')} V${B('s3')}`, dashed: true },
+  { id: 'worker-claude', d: `M${CX('worker')},${T0('worker')} V${B('claude')}`, both: true },
+  { id: 'worker-rds', d: `M${CX('worker')},${B('worker')} V${T0('rds')}`, both: true },
+  { id: 'worker-sns', d: `M${R('worker')},${CY('worker')} H${L('sns')}` },
+  { id: 'sns-webhook', d: `M${R('sns')},${CY('sns')} H${L('webhook')}` },
+  { id: 'webhook-backend', d: `M${R('webhook')},${CY('webhook')} H${L('backend')}` },
+  { id: 'webhook-wdlq', d: `M${CX('webhook')},${B('webhook')} V${T0('wdlq')}`, dashed: true },
+  { id: 'eb-alertas', d: `M${R('eb')},${CY('eb')} H${L('alertas')}` },
+  { id: 'alertas-rds', d: `M${CX('alertas')},${T0('alertas')} V${B('rds')}` },
+  { id: 'cw-grafana', d: `M${stripRight},${SY + 28} H${L('grafana')}` },
+];
+
+const labels = [
+  { e: 'app-apigw', x: 24, y: CY('apigw') - 8, text: 'HTTPS' },
+  { e: 'app-s3', x: 24, y: CY('s3') + 22, text: 'PUT firmado' },
+  { e: 'retool-apigw', x: CX('retool') + 9, y: 125, text: 'REST' },
+  { e: 'sqs-dlq', x: CX('sqs') + 9, y: (B('dlq') + T0('sqs')) / 2 + 4, text: 'redrive ×3' },
+  { e: 'worker-claude', x: CX('worker') + 9, y: 170, text: 'HTTPS' },
+  { e: 'worker-rds', x: CX('worker') + 9, y: (B('worker') + T0('rds')) / 2 + 4, text: 'TCP 5432' },
+  { e: 'worker-s3', x: CX('s3') + 14, y: B('worker') + 19, text: 'lee con SDK' },
+  { e: 'webhook-wdlq', x: CX('webhook') + 9, y: (B('webhook') + T0('wdlq')) / 2 + 4, text: 'si falla' },
+  { e: 'cw-grafana', x: stripRight + 6, y: SY + 20, text: 'lee' },
+];
+
+const pasos = [
+  {
+    title: 'La app pide una URL firmada',
+    text: 'API Gateway y una Lambda generan una URL de subida temporal. La app no necesita credenciales de AWS.',
+    nodes: ['app', 'apigw'],
+    edges: ['app-apigw'],
+  },
+  {
+    title: 'El archivo sube directo a S3',
+    text: 'El documento va de la app al bucket de originales, sin pasar por el cómputo del sistema.',
+    nodes: ['app', 's3'],
+    edges: ['app-s3'],
+  },
+  {
+    title: 'S3 avisa a la cola',
+    text: 'SQS absorbe los picos. Un mensaje que falla tres veces pasa a la cola de fallos y no se pierde.',
+    nodes: ['s3', 'sqs', 'dlq'],
+    edges: ['s3-sqs', 'sqs-dlq'],
+  },
+  {
+    title: 'El Worker lee con IA',
+    text: 'Toma el mensaje, descarga el documento y lo lee con Haiku. Si la confianza es menor a 0,92, repite con Sonnet.',
+    nodes: ['sqs', 'worker', 's3', 'claude'],
+    edges: ['sqs-worker', 'worker-s3', 'worker-claude'],
+  },
+  {
+    title: 'Guarda la extracción',
+    text: 'Persiste campos, puntajes, modelo y costo en PostgreSQL, dentro de una subred privada.',
+    nodes: ['worker', 'rds'],
+    edges: ['worker-rds'],
+  },
+  {
+    title: 'Avisa a Panalogix',
+    text: 'SNS publica el resultado y una Lambda lo entrega por webhook firmado, con reintentos y su propia cola de fallos.',
+    nodes: ['worker', 'sns', 'webhook', 'wdlq', 'backend'],
+    edges: ['worker-sns', 'sns-webhook', 'webhook-backend', 'webhook-wdlq'],
+  },
+  {
+    title: 'Una persona revisa los casos dudosos',
+    text: 'Retool consume la API REST del sistema; nunca toca la base de datos.',
+    nodes: ['retool', 'apigw'],
+    edges: ['retool-apigw'],
+  },
+  {
+    title: 'Cada día se revisan los vencimientos',
+    text: 'EventBridge activa una Lambda que consulta la base y avisa 30 días antes, 7 días antes y al vencer.',
+    nodes: ['eb', 'alertas', 'rds'],
+    edges: ['eb-alertas', 'alertas-rds'],
+  },
+];
+
+// ───────── Secuencia ─────────
+const actors = [
+  { id: 'pan', x: 90, t: 'Panalogix', c: colors.ext },
+  { id: 'sqs', x: 250, t: 'SQS', c: colors.aws },
+  { id: 'lam', x: 420, t: 'Lambda', c: colors.aws },
+  { id: 'hai', x: 590, t: 'Haiku', c: colors.ai },
+  { id: 'son', x: 760, t: 'Sonnet', c: colors.ai },
+  { id: 'rds', x: 910, t: 'RDS y SNS', c: colors.store },
+];
+const ax = Object.fromEntries(actors.map((a) => [a.id, a.x]));
+type Msg = { from: string; to: string; y: number; text: string; dashed?: boolean };
+const msgs: Msg[] = [
+  { from: 'pan', to: 'sqs', y: 108, text: 'documento + contexto de validación' },
+  { from: 'sqs', to: 'lam', y: 148, text: 'dispara' },
+  { from: 'lam', to: 'hai', y: 188, text: 'extrae (barato)' },
+  { from: 'hai', to: 'lam', y: 224, text: 'campos + confianza', dashed: true },
+  { from: 'lam', to: 'son', y: 294, text: 're-extrae (preciso)' },
+  { from: 'son', to: 'lam', y: 330, text: 'campos + anomalías', dashed: true },
+  { from: 'lam', to: 'rds', y: 488, text: 'persiste (versión, costo, puntajes)' },
+  { from: 'lam', to: 'rds', y: 520, text: 'publica el resultado en SNS' },
+  { from: 'rds', to: 'pan', y: 554, text: 'webhook HTTPS → actualiza estado', dashed: true },
+];
+const notes = [
+  { y: 364, h: 28, text: 'normaliza' },
+  { y: 398, h: 28, text: 'valida reglas' },
+  { y: 432, h: 40, text: 'puntaje de lectura + autenticidad' },
+];
+
+// ───────── Modelo de datos ─────────
+type Field = [string, string?];
+type Table = { id: string; x: number; y: number; w: number; name: string; c: string; fields: Field[] };
+const tables: Table[] = [
+  {
+    id: 'documentos', x: 20, y: 20, w: 270, name: 'documentos', c: '#7F9FD0',
+    fields: [['id (uuid)', 'PK'], ['transportista_id'], ['tipo_documento'], ['s3_key_raw / verified'], ['eliminar_despues (Ley 81)'], ['subido_en']],
+  },
+  {
+    id: 'historial', x: 365, y: 20, w: 270, name: 'historial', c: '#668BC4',
+    fields: [
+      ['id (uuid)', 'PK'], ['documento_id', 'FK'], ['tipo_detectado'], ['campos_extraidos (jsonb)'], ['campos_cifrados (jsonb)'],
+      ['resultado'], ['score_lectura'], ['score_autenticidad'], ['modelo_usado / version'], ['prompt_hash / costo_api'],
+      ['fecha_vencimiento'], ['procesado_en'],
+    ],
+  },
+  {
+    id: 'correcciones', x: 710, y: 20, w: 270, name: 'correcciones', c: '#8FB0DA',
+    fields: [['id (uuid)', 'PK'], ['historial_id', 'FK'], ['campo_corregido'], ['valor_modelo'], ['valor_correcto'], ['corregido_por / _en']],
+  },
+  {
+    id: 'alertas', x: 20, y: 390, w: 270, name: 'alertas', c: '#D9A441',
+    fields: [['id (uuid)', 'PK'], ['historial_id', 'FK'], ['dias_aviso'], ['estado / enviada_en']],
+  },
+  {
+    id: 'tipos', x: 365, y: 390, w: 270, name: 'tipos_documento', c: '#6FB38F',
+    fields: [['codigo', 'PK'], ['nombre'], ['reglas_validacion (jsonb)'], ['obligatorio']],
+  },
+  {
+    id: 'patrones', x: 710, y: 390, w: 270, name: 'patrones', c: '#6FB38F',
+    fields: [['id (uuid)', 'PK'], ['tipo_codigo', 'FK'], ['subtipo'], ['estructura_detectada'], ['confianza_promedio / muestras']],
+  },
+];
+const FH = 22;
+const HH = 30;
+
+const entidades = [
+  ['documentos', 'El archivo físico subido, con sus claves de S3 y la fecha de eliminación (Ley 81).'],
+  ['historial', 'Cada extracción: campos, los dos puntajes, el modelo y la versión usados, y el costo.'],
+  ['correcciones', 'Cada intervención humana como dato etiquetado: valor del modelo frente al valor correcto.'],
+  ['tipos_documento', 'Catálogo de tipos con reglas de validación en JSONB, ajustables sin cambiar código.'],
+  ['patrones', 'Lo aprendido por tipo y variante de documento: estructura detectada y confianza promedio.'],
+  ['alertas', 'Avisos de vencimiento enviados, para no duplicarlos.'],
+];
+
+// ───────── Despliegue ─────────
+const zonas = [
+  {
+    title: 'Cómputo serverless',
+    items: [
+      ['Lambda Worker', 'Python 3.12, dentro de la VPC'],
+      ['Lambda Alertas y URL firmada', 'dentro de la VPC'],
+      ['SQS y cola de fallos', ''],
+      ['EventBridge', ''],
+      ['SNS', ''],
+      ['VPC Endpoints', 'S3, SNS, SQS y SSM, sin salida a internet'],
+    ],
+  },
+  {
+    title: 'Almacenamiento',
+    items: [
+      ['S3 originales', 'acceso por HTTPS'],
+      ['S3 verificados', ''],
+      ['RDS PostgreSQL 17', 'subred privada, solo accesible desde las Lambda'],
+    ],
+  },
+  {
+    title: 'Seguridad y observabilidad',
+    items: [
+      ['SSM Parameter Store', 'cifrado con KMS'],
+      ['CloudWatch', 'logs y métricas'],
+      ['Roles IAM', 'mínimo privilegio por función'],
+    ],
+  },
+];
+const externos = [
+  ['Dispositivo móvil', 'App Panalogix, entra por HTTPS y TLS'],
+  ['Anthropic', 'Claude Haiku y Sonnet, por HTTPS'],
+  ['Retool Cloud', 'gestión interna, consume la API REST'],
+  ['Grafana Cloud', 'dashboards, lee solo métricas de CloudWatch'],
+  ['Backend Panalogix', 'DigitalOcean, recibe el webhook por HTTPS'],
+];
+const postura = [
+  ['Base de datos aislada', 'RDS vive en una subred privada y solo las funciones Lambda llegan a ella. No está expuesta a internet.'],
+  ['Tráfico cifrado', 'Todo lo que sale hacia Anthropic o Panalogix, y lo que llega desde el dispositivo, viaja por HTTPS y TLS.'],
+  ['Secretos fuera del código', 'Las credenciales se resuelven al ejecutar desde SSM Parameter Store, con cifrado KMS.'],
+  ['Acceso mediado', 'Retool consume la API REST y Grafana solo lee métricas de CloudWatch. Ninguno toca la base de datos.'],
+  ['Mínimo privilegio', 'Cada función tiene su rol IAM y carga solo los secretos que usa.'],
+  ['Sin salida por NAT', 'Las Lambda en la VPC llegan a S3, SNS, SQS y SSM por VPC Endpoints, no por internet.'],
+];
+
+const font = "'Oxanium Variable', system-ui, sans-serif";
+const tabs = [
+  { id: 'cont', label: 'Contenedores' },
+  { id: 'sec', label: 'Secuencia' },
+  { id: 'datos', label: 'Datos' },
+  { id: 'desp', label: 'Despliegue y red' },
+];
+const tableH = (t: Table) => HH + t.fields.length * FH + 12;
+const T = Object.fromEntries(tables.map((t) => [t.id, t]));
+---
+
+<div class="xp" data-xp>
+  <div class="xp__tabs" role="tablist" aria-label="Vistas de la arquitectura">
+    {tabs.map((t, i) => (
+      <button
+        class="xp__tab"
+        type="button"
+        role="tab"
+        id={`xp-tab-${t.id}`}
+        aria-controls={`xp-panel-${t.id}`}
+        aria-selected={i === 0 ? 'true' : 'false'}
+        tabindex={i === 0 ? 0 : -1}
+        data-tab={t.id}
+      >
+        {t.label}
+      </button>
+    ))}
+  </div>
+
+  <!-- ═════ Contenedores ═════ -->
+  <section class="xp__panel" id="xp-panel-cont" role="tabpanel" aria-labelledby="xp-tab-cont" data-panel="cont">
+    <h3 class="xp__title">Vista de contenedores</h3>
+    <p class="xp__lead">
+      Las piezas ejecutables y de almacenamiento dentro de la frontera del sistema, y cómo se hablan entre sí. Elige un paso para ver
+      por dónde pasa un documento.
+    </p>
+
+    <div class="diagram" tabindex="0" role="region" aria-label="Diagrama de contenedores del SVD (desplazable)">
+      <svg viewBox="0 0 1280 690" role="img" aria-labelledby="xp-c-t xp-c-d" xmlns="http://www.w3.org/2000/svg" data-svg>
+        <title id="xp-c-t">Contenedores del Sistema de Verificación Documental en AWS</title>
+        <desc id="xp-c-d">
+          La app de Panalogix pide una URL firmada a API Gateway y sube el documento a S3. S3 avisa a SQS, que tiene una cola de fallos.
+          Una Lambda Worker dentro de una VPC lee el documento con Claude, guarda el resultado en RDS PostgreSQL y lo publica en SNS.
+          Una Lambda Webhook lo entrega al backend de Panalogix, con su propia cola de fallos. EventBridge activa cada día una Lambda
+          de alertas. Retool usa la API REST. KMS, SSM, IAM, X-Ray y CloudWatch cubren la seguridad y la observabilidad, y Grafana lee CloudWatch.
+        </desc>
+        <defs>
+          <marker id="xp-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M1,1 9,5 1,9" fill="none" stroke="#BDBFC2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </marker>
+          <marker id="xp-arr-on" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M1,1 9,5 1,9" fill="none" stroke="#8FB0DA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </marker>
+        </defs>
+
+        <!-- Frontera de AWS -->
+        <rect x="185" y="130" width="916" height="540" rx="22" fill="none" stroke="#8FB0DA" stroke-opacity="0.55" stroke-width="1.5" stroke-dasharray="7 6" />
+        <text x="1085" y="153" text-anchor="end" fill="#8FB0DA" font-size="14" font-weight="600" font-family={font}>AWS Cloud · us-east-1</text>
+
+        <!-- VPC -->
+        <rect x={col[2] - 14} y="236" width={W + 28} height="346" rx="16" fill="#668BC4" fill-opacity="0.06" stroke="#668BC4" stroke-opacity="0.6" stroke-width="1.3" stroke-dasharray="4 4" />
+        <text x={col[2] - 2} y="572" fill="#A9C1E6" font-size="13" font-family={font}>VPC · subred privada</text>
+
+        {edges.map((e) => (
+          <path
+            class="xp-edge"
+            data-e={e.id}
+            d={e.d}
+            fill="none"
+            stroke="#BDBFC2"
+            stroke-opacity="0.75"
+            stroke-width="1.6"
+            stroke-dasharray={e.dashed ? '5 5' : undefined}
+            marker-end="url(#xp-arr)"
+            marker-start={e.both ? 'url(#xp-arr)' : undefined}
+          />
+        ))}
+
+        {labels.map((l) => (
+          <text class="xp-lbl" data-e={l.e} x={l.x} y={l.y} fill="#A7AAB0" font-size="13" font-family={font}>{l.text}</text>
+        ))}
+
+        {nodes.map((k) => (
+          <g class="xp-node" data-n={k.id}>
+            <rect x={k.x} y={k.y} width={k.w ?? W} height={H} rx="14" fill="#1F232B" stroke={colors[k.kind]} stroke-width="1.8" />
+            <text x={k.x + 14} y={k.y + 29} fill="#F1EFE9" font-size="15.5" font-weight="600" font-family={font}>{k.title}</text>
+            <text x={k.x + 14} y={k.y + 50} fill="#A7AAB0" font-size="13" font-family={font}>{k.sub}</text>
+          </g>
+        ))}
+
+        {strip.map((s, i) => (
+          <g class="xp-node xp-strip" data-n={s.id}>
+            <rect x={205 + i * SS} y={SY} width={SW} height="56" rx="12" fill="#1F232B" stroke={colors.sec} stroke-opacity="0.8" stroke-width="1.5" />
+            <text x={205 + i * SS + 12} y={SY + 24} fill="#F1EFE9" font-size="14.5" font-weight="600" font-family={font}>{s.title}</text>
+            <text x={205 + i * SS + 12} y={SY + 44} fill="#A7AAB0" font-size="13" font-family={font}>{s.sub}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+    <p class="xp__hint">Desliza el diagrama para verlo completo.</p>
+
+    <ul class="legend" aria-label="Leyenda del diagrama">
+      <li style={`--c:${colors.aws}`}><i></i>Cómputo y mensajería</li>
+      <li style={`--c:${colors.store}`}><i></i>Datos</li>
+      <li style={`--c:${colors.ai}`}><i></i>IA</li>
+      <li style={`--c:${colors.sec}`}><i></i>Seguridad y observabilidad</li>
+      <li style={`--c:${colors.ext}`}><i></i>Sistemas externos</li>
+      <li class="legend__line"><i></i>Línea punteada: ruta alterna o de fallo</li>
+    </ul>
+
+    <div class="xp__steps-head">
+      <h4>Recorrido de un documento</h4>
+      <button class="xp__reset" type="button" data-reset hidden>Mostrar todo</button>
+    </div>
+    <ol class="xp__steps">
+      {pasos.map((p, i) => (
+        <li>
+          <button
+            class="xp__step"
+            type="button"
+            aria-pressed="false"
+            data-nodes={p.nodes.join(' ')}
+            data-edges={p.edges.join(' ')}
+          >
+            <span class="xp__num" aria-hidden="true">{i + 1}</span>
+            <span class="xp__step-body">
+              <strong>{p.title}</strong>
+              <span>{p.text}</span>
+            </span>
+          </button>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <!-- ═════ Secuencia ═════ -->
+  <section class="xp__panel" id="xp-panel-sec" role="tabpanel" aria-labelledby="xp-tab-sec" data-panel="sec">
+    <h3 class="xp__title">Secuencia de una verificación</h3>
+    <p class="xp__lead">
+      El orden exacto de las interacciones con la estrategia híbrida de modelos: primero el barato, y el preciso solo cuando la
+      confianza lo pide.
+    </p>
+    <div class="diagram" tabindex="0" role="region" aria-label="Diagrama de secuencia (desplazable)">
+      <svg viewBox="0 0 1000 590" role="img" aria-labelledby="xp-s-t xp-s-d" xmlns="http://www.w3.org/2000/svg">
+        <title id="xp-s-t">Secuencia de verificación con estrategia híbrida</title>
+        <desc id="xp-s-d">
+          Panalogix envía el documento y su contexto a SQS, que dispara la Lambda. La Lambda extrae con Haiku y recibe campos y confianza.
+          Si la confianza es menor a 0,92, repite con Sonnet. Luego normaliza, valida reglas y calcula los puntajes de lectura y autenticidad.
+          Persiste en RDS, publica en SNS y el webhook HTTPS actualiza el estado del transportista en Panalogix.
+        </desc>
+        <defs>
+          <marker id="xp-sarr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M1,1 9,5 1,9" fill="none" stroke="#BDBFC2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </marker>
+        </defs>
+
+        {actors.map((a) => (
+          <g>
+            <rect x={a.x - 62} y="14" width="124" height="38" rx="10" fill="#1F232B" stroke={a.c} stroke-width="1.6" />
+            <text x={a.x} y="38" text-anchor="middle" fill="#F1EFE9" font-size="14" font-weight="600" font-family={font}>{a.t}</text>
+            <line x1={a.x} y1="52" x2={a.x} y2="580" stroke="#BDBFC2" stroke-opacity="0.3" stroke-dasharray="4 5" />
+          </g>
+        ))}
+
+        <!-- alt: escalar a Sonnet -->
+        <rect x="340" y="238" width="500" height="112" rx="10" fill="#8FB0DA" fill-opacity="0.07" stroke="#8FB0DA" stroke-opacity="0.6" stroke-dasharray="5 4" />
+        <text x="352" y="258" fill="#8FB0DA" font-size="12.5" font-weight="600" font-family={font}>alt · ¿confianza menor a 0,92? → escalar a Sonnet</text>
+
+        {notes.map((t) => (
+          <g>
+            <rect x={ax.lam - 100} y={t.y} width="200" height={t.h} rx="8" fill="#1F232B" stroke="#668BC4" stroke-opacity="0.7" />
+            <text x={ax.lam} y={t.y + t.h / 2 + 4.5} text-anchor="middle" fill="#F1EFE9" font-size="12.5" font-family={font}>{t.text}</text>
+          </g>
+        ))}
+
+        {msgs.map((m) => {
+          const x1 = ax[m.from];
+          const x2 = ax[m.to];
+          const mid = (x1 + x2) / 2;
+          return (
+            <g>
+              <line
+                x1={x1}
+                y1={m.y}
+                x2={x2 + (x2 > x1 ? -3 : 3)}
+                y2={m.y}
+                stroke="#BDBFC2"
+                stroke-opacity="0.8"
+                stroke-width="1.5"
+                stroke-dasharray={m.dashed ? '5 4' : undefined}
+                marker-end="url(#xp-sarr)"
+              />
+              <text x={mid} y={m.y - 7} text-anchor="middle" fill="#D3D1CA" font-size="12.5" font-family={font}>{m.text}</text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+    <p class="xp__hint">Desliza el diagrama para verlo completo.</p>
+    <p class="xp__note">
+      Estimación del anteproyecto: si cerca del 70 % de los documentos legibles se resuelve con el modelo barato y solo el 30 % dudoso
+      escala a Sonnet, el ahorro frente a usar siempre el modelo grande es de alrededor del 48 %. Es un cálculo previo, no una medición.
+    </p>
+  </section>
+
+  <!-- ═════ Datos ═════ -->
+  <section class="xp__panel" id="xp-panel-datos" role="tabpanel" aria-labelledby="xp-tab-datos" data-panel="datos">
+    <h3 class="xp__title">Modelo de datos</h3>
+    <p class="xp__lead">
+      Esquema <code>verificaciones</code>. El documento físico se separa de cada extracción, y los datos personales se guardan cifrados
+      en un campo aparte.
+    </p>
+    <div class="diagram" tabindex="0" role="region" aria-label="Diagrama entidad-relación (desplazable)">
+      <svg viewBox="0 0 1000 560" role="img" aria-labelledby="xp-d-t xp-d-d" xmlns="http://www.w3.org/2000/svg">
+        <title id="xp-d-t">Modelo entidad-relación del esquema verificaciones</title>
+        <desc id="xp-d-d">
+          Un documento tiene muchas extracciones en historial. Cada fila de historial puede tener muchas correcciones humanas y muchas alertas,
+          y pertenece a un tipo de documento. Cada tipo de documento tiene muchos patrones aprendidos.
+        </desc>
+        <defs>
+          <marker id="xp-darr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M1,1 9,5 1,9" fill="none" stroke="#BDBFC2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </marker>
+        </defs>
+
+        <g fill="none" stroke="#BDBFC2" stroke-opacity="0.75" stroke-width="1.5" marker-end="url(#xp-darr)">
+          <path d="M290,100 H365" />
+          <path d="M635,100 H710" />
+          <path d="M500,342 V390" />
+          <path d="M420,342 V366 H155 V390" />
+          <path d="M635,430 H710" />
+        </g>
+        <g fill="#A7AAB0" font-size="12" font-family={font}>
+          <text x="298" y="92">1:N</text>
+          <text x="643" y="92">1:N</text>
+          <text x="508" y="372">N:1</text>
+          <text x="163" y="382">1:N</text>
+          <text x="643" y="422">1:N</text>
+        </g>
+
+        {tables.map((t) => (
+          <g>
+            <rect x={t.x} y={t.y} width={t.w} height={tableH(t)} rx="12" fill="#1F232B" stroke={t.c} stroke-width="1.5" />
+            <path d={`M${t.x},${t.y + HH} V${t.y + 12} a12,12 0 0 1 12,-12 H${t.x + t.w - 12} a12,12 0 0 1 12,12 V${t.y + HH} Z`} fill={t.c} fill-opacity="0.22" />
+            <text x={t.x + 14} y={t.y + 20} fill="#F1EFE9" font-size="14" font-weight="600" font-family={font}>{t.name}</text>
+            {t.fields.map((f, i) => (
+              <g>
+                <text x={t.x + 14} y={t.y + HH + 18 + i * FH} fill="#D3D1CA" font-size="12.5" font-family={font}>{f[0]}</text>
+                {f[1] && (
+                  <text x={t.x + t.w - 14} y={t.y + HH + 18 + i * FH} text-anchor="end" fill={t.c} font-size="11.5" font-weight="600" font-family={font}>{f[1]}</text>
+                )}
+              </g>
+            ))}
+          </g>
+        ))}
+        <text x="20" y="548" fill="#A7AAB0" font-size="12" font-family={font}>Reglas en datos, no en código · datos personales cifrados en campo separado (Ley 81 de 2019)</text>
+      </svg>
+    </div>
+    <p class="xp__hint">Desliza el diagrama para verlo completo.</p>
+    <dl class="entities">
+      {entidades.map(([nombre, texto]) => (
+        <div>
+          <dt><code>{nombre}</code></dt>
+          <dd>{texto}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+
+  <!-- ═════ Despliegue ═════ -->
+  <section class="xp__panel" id="xp-panel-desp" role="tabpanel" aria-labelledby="xp-tab-desp" data-panel="desp">
+    <h3 class="xp__title">Despliegue y red</h3>
+    <p class="xp__lead">
+      Todo corre en la región us-east-1 de AWS, organizado en tres zonas. Fuera de AWS solo viven los servicios externos con los que
+      el sistema se comunica.
+    </p>
+
+    <div class="zones">
+      <div class="zones__aws">
+        <p class="zones__label">AWS Cloud · us-east-1</p>
+        <div class="zones__grid">
+          {zonas.map((z) => (
+            <div class="zone">
+              <h4>{z.title}</h4>
+              <ul>
+                {z.items.map(([a, b]) => (
+                  <li>
+                    <strong>{a}</strong>
+                    {b && <span>{b}</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div class="zones__ext">
+        <p class="zones__label">Fuera de AWS</p>
+        <ul>
+          {externos.map(([a, b]) => (
+            <li>
+              <strong>{a}</strong>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <h4 class="xp__sub">Postura de seguridad</h4>
+    <div class="decisions">
+      {postura.map(([a, b]) => (
+        <div>
+          <h3>{a}</h3>
+          <p>{b}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-xp]');
+  if (root) {
+    // Pestañas
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-panel]'));
+    const show = (id: string, focus = false) => {
+      tabs.forEach((t) => {
+        const on = t.dataset.tab === id;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (on && focus) t.focus();
+      });
+      panels.forEach((p) => (p.hidden = p.dataset.panel !== id));
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => show(t.dataset.tab!));
+      t.addEventListener('keydown', (e) => {
+        let j = -1;
+        if (e.key === 'ArrowRight') j = (i + 1) % tabs.length;
+        if (e.key === 'ArrowLeft') j = (i - 1 + tabs.length) % tabs.length;
+        if (e.key === 'Home') j = 0;
+        if (e.key === 'End') j = tabs.length - 1;
+        if (j >= 0) {
+          e.preventDefault();
+          show(tabs[j].dataset.tab!, true);
+        }
+      });
+    });
+    show('cont');
+    root.classList.add('is-ready');
+
+    // Recorrido paso a paso
+    const svg = root.querySelector<SVGElement>('[data-svg]')!;
+    const steps = Array.from(root.querySelectorAll<HTMLButtonElement>('.xp__step'));
+    const reset = root.querySelector<HTMLButtonElement>('[data-reset]')!;
+    const nodeEls = Array.from(svg.querySelectorAll<SVGElement>('[data-n]'));
+    const edgeEls = Array.from(svg.querySelectorAll<SVGElement>('[data-e]'));
+
+    const apply = (btn: HTMLButtonElement | null) => {
+      steps.forEach((s) => s.setAttribute('aria-pressed', String(s === btn)));
+      reset.hidden = !btn;
+      if (!btn) {
+        svg.classList.remove('has-focus');
+        [...nodeEls, ...edgeEls].forEach((el) => el.classList.remove('is-on'));
+        return;
+      }
+      const ns = (btn.dataset.nodes || '').split(' ');
+      const es = (btn.dataset.edges || '').split(' ');
+      svg.classList.add('has-focus');
+      nodeEls.forEach((el) => el.classList.toggle('is-on', ns.includes(el.dataset.n!)));
+      edgeEls.forEach((el) => el.classList.toggle('is-on', es.includes(el.dataset.e!)));
+    };
+    steps.forEach((s) =>
+      s.addEventListener('click', () => apply(s.getAttribute('aria-pressed') === 'true' ? null : s)),
+    );
+    reset.addEventListener('click', () => apply(null));
+  }
+</script>

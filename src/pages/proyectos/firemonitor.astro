@@ -1,0 +1,354 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import RiskCard from '../../components/RiskCard.astro';
+import { href } from '../../data/site';
+import dashboard from '../../assets/firemonitor/dashboard.png';
+import hardware from '../../assets/firemonitor/hardware.jpg';
+
+const stack = ['ESP32E', 'MicroPython', 'MQTT con TLS', 'FastAPI', 'Edge Impulse', 'ThingsBoard', 'Docker', 'DigitalOcean', 'Telegram'];
+
+const sensores = [
+  ['DHT11', 'Temperatura', 'G25', '3,3 V'],
+  ['KY-026', 'Llama', 'G14', '3,3 V'],
+  ['MQ-2', 'Humo y gas', 'G35', '5 V'],
+];
+
+const alarmasTabla = [
+  ['Temperatura alta', 'Peligro'],
+  ['Temperatura en ascenso', 'Peligro'],
+  ['Fluctuación de humo', 'Peligro'],
+  ['Humo elevado (MQ-2)', 'Mayor'],
+  ['Llama detectada', 'Crítica'],
+  ['Riesgo crítico de incendio', 'Crítica'],
+];
+
+const decisiones = [
+  {
+    title: 'Un tópico, un token y una variable por dispositivo',
+    text: 'Cada ESP32 publica en su propio tópico (incendios/esp32_N/data) y tiene su propio token en ThingsBoard. Agregar un nodo es crear un tópico, un token y una variable de entorno.',
+  },
+  {
+    title: 'El modelo corre aparte de la API',
+    text: 'La inferencia vive en su propio contenedor y la API solo conoce su dirección HTTP. Se puede reentrenar o cambiar el modelo sin reescribir la lógica de la API.',
+  },
+  {
+    title: 'La seguridad viene de una norma, no de un añadido',
+    text: 'Antes de construir se eligió NFPA 954 como política del prototipo. De ahí salen TLS en la comunicación, tokens firmados para el acceso y contenedores aislados.',
+  },
+  {
+    title: 'Alarmas por severidad',
+    text: 'ThingsBoard separa lo que merece atención de lo que exige acción: peligro, mayor o crítica. Una llama detectada o un riesgo crítico no se mezclan con una temperatura que sube.',
+  },
+];
+---
+
+<Base
+  title="Sistema de Monitoreo de Incendios | Erick Bellido"
+  description="Prototipo IoT con sensores ESP32 que clasifica el riesgo de incendio con un modelo de IA y envía alertas por Telegram y ThingsBoard: arquitectura, hardware y panel."
+>
+  <section class="pagehead">
+    <div class="hero__glow" aria-hidden="true"></div>
+    <div class="container">
+      <div class="pagehead__grid">
+        <div class="pagehead__copy">
+          <a class="crumb" href={href('#proyectos')}><Icon name="chevron" /> Proyectos</a>
+          <h1 class="grad">Sistema de Monitoreo de Incendios</h1>
+          <p class="lead">
+            Prototipo IoT que mide temperatura, humo y llama en dos bodegas, estima el riesgo de incendio con un modelo de IA y envía
+            alertas automáticas por Telegram y ThingsBoard.
+          </p>
+          <ul class="chips" aria-label="Tecnologías">
+            {stack.map((s) => <li>{s}</li>)}
+          </ul>
+          <div class="actions">
+            <a class="btn btn--primary" href="#arquitectura">Ver la arquitectura <Icon name="chevron" /></a>
+            <a class="btn btn--ghost" href="https://github.com/erickAlejandr0/FireMonitorSystem-API" rel="noopener"><Icon name="github" /> Repositorio</a>
+          </div>
+        </div>
+        <RiskCard />
+      </div>
+      <dl class="meta">
+        <div>
+          <dt>Tipo</dt>
+          <dd>Prototipo IoT de extremo a extremo: hardware, API y nube</dd>
+        </div>
+        <div>
+          <dt>Origen</dt>
+          <dd>Proyecto en equipo de cuatro, Desarrollo de Software VIII (UTP)</dd>
+        </div>
+        <div>
+          <dt>Rol</dt>
+          <dd>Líder del equipo, presente en las decisiones de arquitectura y construcción</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="doc"><div class="container">
+    <section class="block" aria-labelledby="problema">
+      <h2 id="problema" class="grad">El problema</h2>
+      <div class="prose">
+        <p>
+          Muchos sistemas de detección de incendios no dan información inmediata ni detallada, y eso retrasa la respuesta de los
+          bomberos. El proyecto parte de ese vacío en el Benemérito Cuerpo de Bomberos de la República de Panamá y propone un prototipo
+          que entregue datos en tiempo real del lugar y avise cuando la situación pide intervenir.
+        </p>
+        <p>
+          Antes de construir, el equipo hizo una investigación descriptiva, con revisión documental y encuesta, para entender cómo se
+          gestiona hoy la respuesta a incendios. Después validó el prototipo con simulaciones controladas de humo, temperatura y llama.
+        </p>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="arquitectura" style="scroll-margin-top: 5rem">
+      <h2 id="arquitectura" class="grad">Arquitectura</h2>
+      <div class="prose">
+        <p>
+          Cada ESP32E publica sus lecturas por MQTT con TLS en un tópico propio. La API se suscribe, envía la telemetría por HTTP al
+          modelo de IA y recibe la probabilidad de cuatro clases: fuego, llama, humo o gas, y normal, junto con un riesgo de incendio.
+          Con eso reenvía los datos a ThingsBoard por su API REST y, si el riesgo es alto, avisa por Telegram.
+        </p>
+      </div>
+      <div class="diagram" tabindex="0" role="region" aria-label="Diagrama de arquitectura de FireMonitor (desplazable)">
+        <svg viewBox="0 0 1110 440" role="img" aria-labelledby="fm-t fm-d" xmlns="http://www.w3.org/2000/svg">
+          <title id="fm-t">Arquitectura del Sistema de Monitoreo de Incendios</title>
+          <desc id="fm-d">
+            Dos microcontroladores ESP32E, cada uno con sensores DHT11, KY-026 y MQ-2, publican por MQTT con TLS en el broker EMQX Cloud.
+            La API FastAPI, en un droplet de DigitalOcean con Docker, se suscribe al broker y consulta por HTTP al modelo de Edge Impulse,
+            que corre en el mismo droplet. La API envía la telemetría y las predicciones a ThingsBoard, que corre con PostgreSQL en un
+            segundo droplet, y manda alertas a Telegram.
+          </desc>
+          <defs>
+            <marker id="fm-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M1,1 9,5 1,9" fill="none" stroke="#BDBFC2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </marker>
+          </defs>
+
+          <!-- Zonas -->
+          <rect x="14" y="48" width="216" height="360" rx="20" fill="#D9A441" fill-opacity="0.05" stroke="#D9A441" stroke-opacity="0.55" stroke-width="1.4" stroke-dasharray="6 5" />
+          <text x="30" y="75" fill="#D9A441" font-size="14" font-weight="600" font-family="Oxanium Variable, system-ui, sans-serif">Hardware en las bodegas</text>
+
+          <rect x="560" y="48" width="290" height="360" rx="20" fill="#668BC4" fill-opacity="0.05" stroke="#668BC4" stroke-opacity="0.6" stroke-width="1.4" stroke-dasharray="6 5" />
+          <text x="578" y="75" fill="#A9C1E6" font-size="14" font-weight="600" font-family="Oxanium Variable, system-ui, sans-serif">Droplet de DigitalOcean · Docker</text>
+
+          <rect x="904" y="48" width="192" height="200" rx="20" fill="#7F9FD0" fill-opacity="0.05" stroke="#7F9FD0" stroke-opacity="0.6" stroke-width="1.4" stroke-dasharray="6 5" />
+          <text x="920" y="75" fill="#A9C1E6" font-size="14" font-weight="600" font-family="Oxanium Variable, system-ui, sans-serif">Segundo droplet · Docker</text>
+
+          <!-- Conexiones -->
+          <g fill="none" stroke="#BDBFC2" stroke-opacity="0.8" stroke-width="1.6" marker-end="url(#fm-arr)">
+            <path d="M230,155 C275,155 285,215 328,215" />
+            <path d="M230,305 C275,305 285,245 328,245" />
+            <path d="M492,225 C525,225 535,150 590,150" />
+            <path d="M705,206 L705,272" marker-start="url(#fm-arr)" />
+            <path d="M820,140 L936,140" />
+            <path d="M820,175 C870,175 880,310 936,320" stroke-dasharray="5 5" />
+          </g>
+
+          <g font-size="13" fill="#A7AAB0" font-family="Oxanium Variable, system-ui, sans-serif">
+            <text x="410" y="306" text-anchor="middle">publican por MQTT + TLS</text>
+            <text x="540" y="168" text-anchor="end">suscribe</text>
+            <text x="718" y="244">HTTP POST</text>
+            <text x="878" y="128" text-anchor="middle">REST</text>
+            <text x="890" y="318" text-anchor="end">alerta</text>
+          </g>
+
+          <!-- Nodos -->
+          <g font-family="Oxanium Variable, system-ui, sans-serif">
+            <g>
+              <rect x="30" y="100" width="184" height="110" rx="14" fill="#1F232B" stroke="#D9A441" stroke-width="1.8" />
+              <text x="44" y="128" fill="#F1EFE9" font-size="15.5" font-weight="600">ESP32E · nodo 1</text>
+              <text x="44" y="152" fill="#A7AAB0" font-size="13">DHT11 · temperatura</text>
+              <text x="44" y="172" fill="#A7AAB0" font-size="13">KY-026 · llama</text>
+              <text x="44" y="192" fill="#A7AAB0" font-size="13">MQ-2 · humo y gas</text>
+            </g>
+            <g>
+              <rect x="30" y="252" width="184" height="110" rx="14" fill="#1F232B" stroke="#D9A441" stroke-width="1.8" />
+              <text x="44" y="280" fill="#F1EFE9" font-size="15.5" font-weight="600">ESP32E · nodo 2</text>
+              <text x="44" y="304" fill="#A7AAB0" font-size="13">DHT11 · temperatura</text>
+              <text x="44" y="324" fill="#A7AAB0" font-size="13">KY-026 · llama</text>
+              <text x="44" y="344" fill="#A7AAB0" font-size="13">MQ-2 · humo y gas</text>
+            </g>
+            <g>
+              <rect x="330" y="180" width="160" height="100" rx="14" fill="#1F232B" stroke="#8E9299" stroke-width="1.8" />
+              <text x="344" y="210" fill="#F1EFE9" font-size="15.5" font-weight="600">EMQX Cloud</text>
+              <text x="344" y="232" fill="#A7AAB0" font-size="13">Broker MQTT</text>
+              <text x="344" y="252" fill="#A7AAB0" font-size="13">puerto 8883 · QoS 1</text>
+            </g>
+            <g>
+              <rect x="590" y="100" width="230" height="106" rx="14" fill="#1F232B" stroke="#668BC4" stroke-width="1.8" />
+              <text x="604" y="130" fill="#F1EFE9" font-size="15.5" font-weight="600">API FastAPI</text>
+              <text x="604" y="153" fill="#A7AAB0" font-size="13">Python 3.11</text>
+              <text x="604" y="173" fill="#A7AAB0" font-size="13">MQTT, modelo, ThingsBoard</text>
+              <text x="604" y="193" fill="#A7AAB0" font-size="13">y alertas en un solo flujo</text>
+            </g>
+            <g>
+              <rect x="590" y="274" width="230" height="100" rx="14" fill="#1F232B" stroke="#8FB0DA" stroke-width="1.8" />
+              <text x="604" y="304" fill="#F1EFE9" font-size="15.5" font-weight="600">Modelo de IA</text>
+              <text x="604" y="327" fill="#A7AAB0" font-size="13">Entrenado en Edge Impulse</text>
+              <text x="604" y="347" fill="#A7AAB0" font-size="13">fuego · llama · humo o gas · normal</text>
+            </g>
+            <g>
+              <rect x="938" y="100" width="144" height="110" rx="14" fill="#1F232B" stroke="#7F9FD0" stroke-width="1.8" />
+              <text x="952" y="130" fill="#F1EFE9" font-size="15.5" font-weight="600">ThingsBoard</text>
+              <text x="952" y="153" fill="#A7AAB0" font-size="13">Panel, reglas</text>
+              <text x="952" y="173" fill="#A7AAB0" font-size="13">y alarmas, con</text>
+              <text x="952" y="193" fill="#A7AAB0" font-size="13">PostgreSQL</text>
+            </g>
+            <g>
+              <rect x="938" y="278" width="144" height="86" rx="14" fill="#1F232B" stroke="#8E9299" stroke-width="1.8" />
+              <text x="952" y="308" fill="#F1EFE9" font-size="15.5" font-weight="600">Telegram</text>
+              <text x="952" y="331" fill="#A7AAB0" font-size="13">Alertas</text>
+              <text x="952" y="351" fill="#A7AAB0" font-size="13">automáticas</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <ul class="legend" aria-label="Leyenda del diagrama">
+        <li style="--c:#D9A441"><i></i>Hardware</li>
+        <li style="--c:#8E9299"><i></i>Servicios externos</li>
+        <li style="--c:#668BC4"><i></i>Backend</li>
+        <li style="--c:#8FB0DA"><i></i>IA</li>
+        <li style="--c:#7F9FD0"><i></i>Visualización y datos</li>
+        <li class="legend__line"><i></i>Línea punteada: aviso por Telegram</li>
+      </ul>
+    </section>
+
+    <section class="block" aria-labelledby="hardware">
+      <h2 id="hardware" class="grad">El hardware</h2>
+      <div class="prose">
+        <p>
+          El circuito usa 6 sensores, 2 ESP32E en una sola protoboard y 32 cables jumper. Cada placa alimenta su propio conjunto de
+          sensores, así que los dos nodos son independientes: uno por bodega. Cada entrada lleva dos cables para llegar mejor al
+          interior de la bodega, y los cables siguen un código de colores: alimentación, tierra y entradas.
+        </p>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <caption class="sr-only">Sensores de cada nodo y su conexión</caption>
+          <thead>
+            <tr><th scope="col">Sensor</th><th scope="col">Mide</th><th scope="col">Pin</th><th scope="col">Alimentación</th></tr>
+          </thead>
+          <tbody>
+            {sensores.map(([s, m, p, a]) => (
+              <tr><td>{s}</td><td>{m}</td><td>{p}</td><td>{a}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div class="gallery">
+        <figure class="gallery__wide">
+          <div class="shot">
+            <Image src={hardware} alt="Protoboard con dos placas ESP32E y sensores conectados con cables jumper de varios colores" widths={[640, 1000, 1400]} sizes="(min-width: 820px) 832px, 100vw" />
+          </div>
+          <figcaption>Los dos ESP32E en la protoboard, durante el montaje.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="riesgo">
+      <h2 id="riesgo" class="grad">Del dato a la alarma</h2>
+      <div class="prose">
+        <p>
+          El modelo devuelve la probabilidad de cada clase y un riesgo de incendio en porcentaje, que se traduce en tres niveles:
+          seguro por debajo de 20 %, alerta de 20 a 60 % y crítico por encima de 60 %. Con esos datos, ThingsBoard crea
+          alarmas de distinta severidad.
+        </p>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <caption class="sr-only">Alarmas configuradas en ThingsBoard y su severidad</caption>
+          <thead>
+            <tr><th scope="col">Alarma</th><th scope="col">Severidad</th></tr>
+          </thead>
+          <tbody>
+            {alarmasTabla.map(([a, s]) => (
+              <tr><td>{a}</td><td>{s}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="pantallas">
+      <h2 id="pantallas" class="grad">El panel en ThingsBoard</h2>
+      <div class="gallery">
+        <figure class="gallery__wide">
+          <div class="shot">
+            <Image src={dashboard} alt="Panel de monitoreo con temperatura, humo, riesgo de incendio y estado de dos nodos, gráficas de las últimas 6 horas, probabilidades del modelo, alarmas y últimas lecturas" widths={[800, 1200, 2000]} sizes="(min-width: 820px) 832px, 100vw" />
+          </div>
+          <figcaption>
+            Un nodo en estado seguro y otro en crítico: valores actuales, histórico de seis horas, probabilidades del modelo, alarmas y
+            últimas lecturas.
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="seguridad">
+      <h2 id="seguridad" class="grad">Seguridad</h2>
+      <div class="prose">
+        <p>
+          Como política de funcionamiento se tomó la norma NFPA 954, sobre ciberseguridad en sistemas de protección contra incendios.
+          En el prototipo significa cuatro cosas:
+        </p>
+      </div>
+      <ul class="points">
+        <li>Comunicación cifrada con TLS entre los dispositivos y el broker.</li>
+        <li>Acceso mediante tokens firmados por las plataformas oficiales.</li>
+        <li>Servicios en contenedores aislados.</li>
+        <li>Telemetría segura hacia la plataforma.</li>
+      </ul>
+    </section>
+
+    <section class="block" aria-labelledby="metodo">
+      <h2 id="metodo" class="grad">Cómo lo trabajamos</h2>
+      <div class="prose">
+        <p>
+          Seguimos la metodología MDE-GPC-BP, que combina ingeniería dirigida por modelos, gobernanza de políticas críticas y procesos
+          de negocio. En la práctica: modelamos el sistema con UML (casos de uso, comunicación y despliegue) y las vistas 4+1, traducimos
+          la norma NFPA en reglas del prototipo y partimos del funcionamiento real del cuerpo de bomberos.
+        </p>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="decisiones">
+      <h2 id="decisiones" class="grad">Decisiones de diseño</h2>
+      <div class="decisions">
+        {decisiones.map((d) => (
+          <div>
+            <h3>{d.title}</h3>
+            <p>{d.text}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="aprendi">
+      <h2 id="aprendi" class="grad">Lo que aprendí</h2>
+      <div class="prose">
+        <p>
+          Lideré el equipo y participé en todas las decisiones de arquitectura y de construcción. La programación de la API en Python fue
+          una tarea que me asigné yo mismo, y con ella configuré ThingsBoard, una plataforma que no conocía. Me hizo entender mejor la
+          comunicación cliente-servidor y cómo se manejan los datos IoT en la nube, y me mostró cómo encajan hardware, software y
+          servidores en un mismo sistema.
+        </p>
+        <p>
+          Una aclaración sobre el alcance: es un prototipo validado con simulaciones controladas. No publico métricas de precisión del
+          modelo porque el proyecto no las documenta.
+        </p>
+      </div>
+    </section>
+
+    <section class="block" aria-label="Más proyectos" style="padding-bottom: clamp(4rem, 8vw, 6rem)">
+      <div class="nextlink">
+        <div>
+          <h2>Más proyectos</h2>
+          <p>Panalogix y el Sistema de Verificación Documental, además de otros trabajos.</p>
+        </div>
+        <a class="btn btn--primary" href={href('#proyectos')}>Ver proyectos <Icon name="chevron" /></a>
+      </div>
+    </section>
+  </div></div>
+</Base>

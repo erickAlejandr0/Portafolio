@@ -1,0 +1,170 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import ArchitectureExplorer from '../../components/ArchitectureExplorer.astro';
+import PipelineCard from '../../components/PipelineCard.astro';
+import { href } from '../../data/site';
+
+const documentos = [
+  ['Licencia E3, F o G', 'Conductor', 'ATTT y SERTRACEN'],
+  ['Cédula de identidad', 'Conductor', 'Tribunal Electoral'],
+  ['Seguro SOAT', 'Vehículo', 'Aseguradoras'],
+  ['Revisado técnico', 'Vehículo', 'ATTT'],
+  ['Certificado de Registro de Carga Terrestre', 'Vehículo', 'ATTT, Dirección de Transporte de Carga'],
+  ['Permiso de pesos y dimensiones', 'Vehículo', 'MOP'],
+];
+
+const decisiones = [
+  {
+    title: 'Sin base de datos compartida',
+    text: 'Panalogix y SVD se comunican solo por contratos: una API REST de entrada y un webhook de salida. Cada sistema evoluciona sin romper al otro.',
+  },
+  {
+    title: 'IA híbrida para controlar el costo',
+    text: 'Primero el modelo económico y solo se escala cuando hace falta. Si cerca del 70 % de los documentos legibles se resuelven con el modelo económico, el ahorro estimado frente a usar siempre el más capaz es de alrededor del 48 %.',
+  },
+  {
+    title: 'Una foto borrosa no es un documento inválido',
+    text: 'Si una fecha crítica no se puede leer, la regla pide revisión manual en lugar de rechazar. Solo una fecha legible y vencida produce un rechazo.',
+  },
+  {
+    title: 'Datos personales protegidos',
+    text: 'La cédula y el nombre se cifran con KMS en una columna aparte, en línea con la Ley 81 de 2019 de Panamá. La base de datos vive en una subred privada.',
+  },
+  {
+    title: 'Mínimo privilegio',
+    text: 'Cada función carga solo los secretos que usa. Al revisar la infraestructura se vio que la clave de la IA iba a llegar también a la función de alertas, que no la necesita, y se corrigió antes de desplegar.',
+  },
+  {
+    title: 'Sin pagar dos veces ni perder avisos',
+    text: 'Un documento ya procesado se reconoce por su ID, el hash de la extracción y la versión del proceso. No se vuelve a extraer, pero el resultado siempre se publica.',
+  },
+];
+
+const stack = ['Python 3.12', 'AWS Lambda', 'API Gateway', 'S3', 'SQS y SNS', 'EventBridge', 'KMS y SSM', 'PostgreSQL en RDS', 'AWS SAM', 'Claude (Haiku y Sonnet)', 'Retool'];
+---
+
+<Base
+  title="Sistema de Verificación Documental | Erick Bellido"
+  description="Servicio backend serverless que verifica con IA los documentos regulatorios de transportistas: arquitectura, decisiones de diseño y modelo de datos."
+>
+  <section class="pagehead">
+    <div class="hero__glow" aria-hidden="true"></div>
+    <div class="container">
+      <div class="pagehead__grid">
+        <div class="pagehead__copy">
+          <a class="crumb" href={href('#proyectos')}><Icon name="chevron" /> Proyectos</a>
+          <h1 class="grad">Sistema de Verificación Documental</h1>
+          <p class="lead">
+            Servicio backend independiente que revisa con IA los documentos de los transportistas de Panalogix y devuelve una decisión
+            en lugar de una cola de revisión manual.
+          </p>
+          <ul class="chips" aria-label="Tecnologías">
+            {stack.map((s) => <li>{s}</li>)}
+          </ul>
+          <div class="actions">
+            <a class="btn btn--primary" href="#arquitectura">Ver la arquitectura <Icon name="chevron" /></a>
+            <a class="btn btn--ghost" href="https://github.com/erickAlejandr0/Sistema-de-verificacion-Documental-Panalogix" rel="noopener"><Icon name="github" /> Repositorio</a>
+          </div>
+        </div>
+        <PipelineCard />
+      </div>
+      <dl class="meta">
+        <div>
+          <dt>Tipo</dt>
+          <dd>Servicio backend serverless en AWS</dd>
+        </div>
+        <div>
+          <dt>Origen</dt>
+          <dd>Proyecto en equipo de Tópicos especiales I (UTP), implementado como servicio de Panalogix</dd>
+        </div>
+        <div>
+          <dt>Integración</dt>
+          <dd>API REST de entrada y webhook firmado de salida</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="doc"><div class="container">
+    <section class="block" aria-labelledby="problema">
+      <h2 id="problema" class="grad">El problema</h2>
+      <div class="prose">
+        <p>
+          Para operar legalmente, un transportista de carga terrestre debe mantener vigentes seis documentos emitidos por distintas
+          entidades. Revisarlos a mano toma de 3 a 5 días hábiles, y nadie avisa cuando uno está por vencer.
+        </p>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <caption class="sr-only">Documentos que debe mantener vigentes un transportista</caption>
+          <thead>
+            <tr><th scope="col">Documento</th><th scope="col">Aplica a</th><th scope="col">Emisor</th></tr>
+          </thead>
+          <tbody>
+            {documentos.map(([d, a, e]) => (
+              <tr><td>{d}</td><td>{a}</td><td>{e}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="arquitectura" style="scroll-margin-top: 5rem">
+      <h2 id="arquitectura" class="grad">Arquitectura</h2>
+      <div class="prose">
+        <p>
+          Está documentada con el modelo C4 y las vistas 4+1. El sistema está pensado para que ningún documento se pierda y para que un
+          fallo en una pieza no arrastre a las demás: componentes desacoplados por colas y eventos, cómputo bajo demanda y secretos
+          fuera del código. Estas son sus cuatro vistas.
+        </p>
+      </div>
+      <ArchitectureExplorer />
+    </section>
+
+    <section class="block" aria-labelledby="decisiones">
+      <h2 id="decisiones" class="grad">Decisiones de diseño</h2>
+      <div class="decisions">
+        {decisiones.map((d) => (
+          <div>
+            <h3>{d.title}</h3>
+            <p>{d.text}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="construccion">
+      <h2 id="construccion" class="grad">Cómo lo construí</h2>
+      <div class="prose">
+        <p>
+          Usé IA también para desarrollar. Un agente de código en Cursor escribía las piezas, y Claude las revisaba con una lista
+          fija: idempotencia, manejo de errores, aislamiento de secretos y mínimo privilegio. Las pruebas son unitarias, de
+          integración y de contrato.
+        </p>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="despliegue">
+      <h2 id="despliegue" class="grad">Lo que aprendí al desplegar</h2>
+      <div class="prose">
+        <p>Tres ajustes que no se veían en el diseño ni en el código y salieron al probar contra la nube real:</p>
+      </div>
+      <ul class="points">
+        <li>La puerta de enlace de la API debía hablar el mismo formato de evento que el código esperaba.</li>
+        <li>Los secretos se leen desde el almacén de parámetros (SSM), no con un formato cifrado incompatible con las variables de entorno.</li>
+        <li>El resultado final se entrega por dos caminos, notificación activa y consulta periódica, para no depender de uno solo.</li>
+      </ul>
+    </section>
+
+    <section class="block" aria-label="Siguiente proyecto" style="padding-bottom: clamp(4rem, 8vw, 6rem)">
+      <div class="nextlink">
+        <div>
+          <h2>Sistema de Monitoreo de Incendios</h2>
+          <p>Un prototipo IoT con sensores ESP32, un modelo de IA y alertas automáticas.</p>
+        </div>
+        <a class="btn btn--primary" href={href('proyectos/firemonitor/')}>Ver el proyecto <Icon name="chevron" /></a>
+      </div>
+    </section>
+  </div></div>
+</Base>

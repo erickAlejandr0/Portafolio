@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import { href } from '../data/site';
+---
+
+<Base title="Página no encontrada | Erick Bellido">
+  <section class="pagehead">
+    <div class="hero__glow" aria-hidden="true"></div>
+    <div class="container">
+      <div class="pagehead__copy">
+        <h1 class="grad">No encontramos esa página</h1>
+        <p class="lead">El enlace puede estar mal escrito o la página ya no existe. Vuelve al inicio para ver los proyectos.</p>
+        <a class="btn btn--primary" href={href()}>Ir al inicio</a>
+      </div>
+    </div>
+  </section>
+</Base>

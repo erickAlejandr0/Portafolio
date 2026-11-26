@@ -1,0 +1,408 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import MiniFlow from '../components/MiniFlow.astro';
+import { href, site } from '../data/site';
+import dashboard from '../assets/panalogix/dashboard.png';
+import publicar from '../assets/panalogix/publicaciones.png';
+import fmDashboard from '../assets/firemonitor/dashboard.png';
+import fmAlarmas from '../assets/firemonitor/alarmas.png';
+
+const ficha = [
+  { k: 'Formación', v: 'Último año de Desarrollo y Gestión de Software, Universidad Tecnológica de Panamá. Capítulo de Honor.' },
+  { k: 'Práctica', v: 'Desarrollador Python y Flask en el DITIC (UTP), enero a febrero de 2026.' },
+  { k: 'Certificación', v: 'PMI CAPM, en preparación.' },
+  { k: 'Ubicación', v: 'Panamá. Remoto, híbrido o presencial.' },
+];
+
+const principios = [
+  {
+    title: 'Entender antes de construir',
+    text: 'Empiezo por el problema y por quienes lo viven. Levanto requisitos, los modelo con casos de uso y BPMN, y solo después elijo la tecnología.',
+  },
+  {
+    title: 'Explicar con claridad',
+    text: 'Una solución que nadie entiende no sirve. Documento la arquitectura (C4, 4+1), las APIs y las decisiones, y discuto las opciones con el equipo.',
+  },
+  {
+    title: 'Calidad y seguridad desde el diseño',
+    text: 'Pruebas unitarias, de integración y de contrato; idempotencia, colas de mensajes fallidos, cifrado y firma de webhooks. Pienso en qué pasa cuando algo falla.',
+  },
+  {
+    title: 'IA como parte del producto',
+    text: 'Integro modelos generativos en soluciones reales cuidando el costo y la confiabilidad: un modelo pequeño por defecto y uno mayor solo cuando hace falta.',
+  },
+];
+
+const habilidades = [
+  { area: 'Backend y APIs', base: true, items: ['Python', 'FastAPI', 'Flask', 'Node.js', 'TypeScript', 'APIs REST', 'Webhooks', 'Stripe', 'Mapbox', 'Ably'] },
+  { area: 'Frontend', base: true, items: ['Next.js', 'React', 'Vue.js', 'HTML y CSS responsive'] },
+  { area: 'Bases de datos', base: true, items: ['PostgreSQL', 'PostGIS', 'MySQL', 'SQL Server', 'Supabase', 'Drizzle ORM'] },
+  { area: 'Nube y contenedores', items: ['AWS: Lambda, SQS, API Gateway, S3, RDS, KMS, X-Ray, SAM', 'Docker', 'Docker Compose', 'Git y GitHub'] },
+  { area: 'IA', items: ['Claude (Anthropic) integrado en productos', 'Extracción de documentos con IA', 'Selección de modelo según costo y confianza', 'Edge Impulse'] },
+  { area: 'Calidad y seguridad', items: ['pytest', 'node:test', 'Pruebas de contrato', 'Idempotencia', 'Colas de mensajes fallidos', 'Cifrado con KMS', 'Firma HMAC', 'JWT'] },
+  { area: 'IoT', items: ['ESP32', 'MQTT con TLS', 'ThingsBoard'] },
+  { area: 'Ingeniería y gestión', items: ['Levantamiento de requisitos', 'Casos de uso', 'UML', 'BPMN', 'C4 y 4+1', 'Scrum', 'Jira', 'PMI CAPM en preparación'] },
+];
+
+const otros = [
+  {
+    name: 'APISystemReport',
+    text: 'API geoespacial de reportes ciudadanos de incidentes, como baches o fallas de infraestructura, con cuatro capas GeoJSON.',
+    stack: ['FastAPI', 'asyncpg', 'PostGIS'],
+    repo: 'https://github.com/erickAlejandr0/APISystemReport',
+  },
+  {
+    name: 'APITourInPanama',
+    text: 'Backend de una app móvil turística con 12 endpoints REST y búsqueda por radio geográfico.',
+    stack: ['FastAPI', 'Supabase'],
+    repo: 'https://github.com/erickAlejandr0/APITourInPanama',
+  },
+  {
+    name: 'Plataforma para la Dirección de Cultura',
+    text: 'Sitio donde escritores panameños conservan sus obras, desarrollado en 7 semanas durante mi práctica en el DITIC.',
+    stack: ['Python', 'Flask', 'Vue.js', 'MySQL', 'Jira'],
+    repo: '',
+  },
+];
+
+const trayectoria = [
+  {
+    when: 'Desde enero de 2027',
+    title: 'Disponible para mi primer empleo',
+    text: 'Busco un equipo donde pueda aportar desde el desarrollo y seguir aprendiendo.',
+    now: true,
+  },
+  {
+    when: 'Materias completas en diciembre de 2026',
+    title: 'Licenciatura en Desarrollo y Gestión de Software, UTP',
+    text: 'Último año en la Universidad Tecnológica de Panamá, con graduación en 2027. Pertenezco al Capítulo de Honor de la licenciatura.',
+  },
+  {
+    when: 'En preparación',
+    title: 'PMI CAPM',
+    text: 'Certificación en gestión de proyectos, para complementar la formación técnica con metodología.',
+  },
+  {
+    when: 'Enero a febrero de 2026',
+    title: 'Práctica profesional en el DITIC, UTP',
+    text: 'Desarrollador Python y Flask. Construí con Vue.js y MySQL la plataforma de la Dirección de Cultura en 7 semanas, con Scrum y Jira.',
+  },
+  {
+    when: 'Título intermedio',
+    title: 'Técnico en Ingeniería con Especialización en Desarrollo y Gestión de Software',
+    text: '',
+  },
+];
+
+const { github, email, linkedin, cv } = site.links;
+---
+
+<Base>
+  <!-- Inicio -->
+  <section class="hero" aria-labelledby="titulo">
+    <div class="hero__glow" aria-hidden="true">
+      <svg class="plan" viewBox="0 0 1200 780" preserveAspectRatio="xMaxYMax slice" fill="none">
+        <defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#668BC4" stroke-width="1.4"/></pattern></defs>
+        <g class="plan__frame">
+          <rect x="690" y="120" width="480" height="560" pathLength="1" />
+          <path d="M690 230H1170M930 120V230" pathLength="1" />
+          <path d="M0 740H1200" pathLength="1" />
+        </g>
+        <g class="plan__hatch">
+          <rect x="1182" y="120" width="18" height="560" fill="url(#hatch)" />
+          <rect x="560" y="734" width="370" height="12" fill="url(#hatch)" />
+        </g>
+        <g class="plan__links">
+          <path d="M1170 400H1200" pathLength="1" />
+          <path d="M930 680V740" pathLength="1" />
+          <path d="M690 400H560V740" pathLength="1" />
+          <path d="M330 740V700H300" pathLength="1" />
+        </g>
+        <g class="plan__nodes">
+          <rect x="684" y="114" width="12" height="12" /><rect x="1164" y="114" width="12" height="12" />
+          <rect x="684" y="674" width="12" height="12" /><rect x="1164" y="674" width="12" height="12" />
+          <circle cx="560" cy="740" r="6" /><circle cx="930" cy="740" r="6" /><circle cx="330" cy="740" r="6" /><circle cx="90" cy="740" r="6" />
+          <circle cx="560" cy="400" r="4" />
+        </g>
+        <g class="plan__tags">
+          <text x="700" y="108">A.01</text><text x="1170" y="108" text-anchor="end">A.02</text>
+          <text x="94" y="764">B.01</text><text x="334" y="764">B.02</text><text x="564" y="764">B.03</text><text x="934" y="764">B.04</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="container hero__grid">
+      <div class="hero__copy">
+        {site.availability && (
+          <p class="badge"><span class="badge__dot" aria-hidden="true"></span>{site.availability}</p>
+        )}
+        <h1 id="titulo" class="grad">Soy Erick: construyo sistemas <em class="serif">de punta a punta</em>, del requisito al despliegue</h1>
+        <p class="lead">
+          Soy desarrollador de software y termino la Licenciatura en Desarrollo y Gestión de Software en la UTP.
+          Trabajo sobre todo con Python y TypeScript: levanto requisitos, modelo la base de datos, desarrollo el
+          backend y el frontend, pruebo y documento.
+        </p>
+        <div class="actions">
+          <a class="btn btn--primary" href="#proyectos">Ver proyectos <Icon name="chevron" /></a>
+          <a class="btn btn--ghost" href="#contacto">Contactar</a>
+        </div>
+      </div>
+
+      <aside class="ficha" aria-label="Datos de Erick">
+        <div class="ficha__id">
+          <span class="ficha__mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64">
+              <path d="M20 40 32 18l12 22" fill="none" stroke="#668BC4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="32" cy="18" r="5" fill="#7F9FD0" />
+              <circle cx="20" cy="40" r="5" fill="#668BC4" />
+              <circle cx="44" cy="40" r="5" fill="#6FB38F" />
+            </svg>
+          </span>
+          <div>
+            <strong>{site.name}</strong>
+            <span>Desarrollador de software en Panamá</span>
+          </div>
+        </div>
+        <dl class="ficha__list">
+          {ficha.map((f) => (
+            <div>
+              <dt>{f.k}</dt>
+              <dd>{f.v}</dd>
+            </div>
+          ))}
+        </dl>
+        <div class="ficha__links">
+          {linkedin && <a class="btn btn--ghost" href={linkedin} rel="noopener"><Icon name="linkedin" /> LinkedIn</a>}
+          {github && <a class="btn btn--ghost" href={github} rel="noopener"><Icon name="github" /> GitHub</a>}
+          {email && <a class="btn btn--ghost" href={`mailto:${email}`}><Icon name="mail" /> Correo</a>}
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Sobre mí -->
+  <section id="sobre-mi" class="section" aria-labelledby="sobre-t" style="scroll-margin-top: 5rem">
+    <div class="container">
+      <div class="section-head">
+        <h2 id="sobre-t" class="grad">Sobre mí</h2>
+      </div>
+      <div class="about">
+        <div class="about__bio">
+          <p>
+            Me gusta recorrer el camino completo de un problema: entenderlo, proponer una solución, explicarla con
+            claridad y ver su impacto.
+          </p>
+          <p>
+            Mis proyectos parten de situaciones concretas: una verificación de documentos que tomaba de 3 a 5 días
+            hábiles y ahora toma segundos, un marketplace de carga con pagos protegidos y seguimiento en vivo, o un
+            sistema IoT que clasifica el riesgo de incendio con sensores reales.
+          </p>
+          <p>
+            Mi base es el desarrollo, y la complemento con ingeniería de software (requisitos, UML, BPMN, arquitectura
+            con C4 y 4+1) y gestión ágil de proyectos con Scrum y Jira. Hice mi práctica profesional en el DITIC de la
+            UTP y ahora busco mi primer empleo.
+          </p>
+        </div>
+        <div class="principles">
+          {principios.map((p) => (
+            <div class="principle">
+              <h3>{p.title}</h3>
+              <p>{p.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Habilidades -->
+  <section id="habilidades" class="section" aria-labelledby="hab-t" style="scroll-margin-top: 5rem">
+    <div class="container">
+      <div class="section-head">
+        <h2 id="hab-t" class="grad">Habilidades</h2>
+        <p class="muted">Agrupadas por área, con el desarrollo como base. Todo lo que aparece aquí lo usé en alguno de mis proyectos.</p>
+      </div>
+      <dl class="skills">
+        {habilidades.map((h) => (
+          <div class={`skills__row ${h.base ? 'skills__row--base' : ''}`}>
+            <dt>{h.area}</dt>
+            <dd>
+              <ul class="chips" aria-label={h.area}>
+                {h.items.map((i) => <li>{i}</li>)}
+              </ul>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p class="skills__note">Idiomas: español nativo; inglés técnico de lectura, con la expresión oral en desarrollo.</p>
+    </div>
+  </section>
+
+  <!-- Proyectos -->
+  <section id="proyectos" class="section" aria-labelledby="proyectos-t" style="scroll-margin-top: 5rem">
+    <div class="container">
+      <div class="section-head">
+        <h2 id="proyectos-t" class="grad">Proyectos destacados</h2>
+        <p class="muted">Un marketplace de fletes, el servicio que verifica a sus transportistas y un sistema IoT que vigila el riesgo de incendio.</p>
+      </div>
+
+      <div class="features">
+        <article class="feature">
+          <div class="feature__text">
+            <h3>Panalogix</h3>
+            <p class="feature__tagline">Marketplace de carga terrestre para Panamá</p>
+            <p>
+              Conecta a empresas que necesitan mover carga con transportistas verificados. El pago queda protegido en
+              escrow, la entrega se confirma con un código OTP y cada viaje se sigue en vivo a lo largo de 8 fases.
+            </p>
+            <ul class="chips" aria-label="Tecnologías">
+              <li>Next.js</li>
+              <li>TypeScript</li>
+              <li>PostgreSQL y PostGIS</li>
+              <li>Stripe</li>
+              <li>Mapbox</li>
+              <li>Ably</li>
+            </ul>
+            <div class="actions">
+              <a class="btn btn--ghost" href={href('proyectos/panalogix/')}>Ver el proyecto <Icon name="chevron" /></a>
+              <a class="btn btn--ghost" href="https://github.com/erickAlejandr0/PANALOGIX" rel="noopener"><Icon name="github" /> Repositorio</a>
+            </div>
+          </div>
+          <div class="feature__media">
+            <div class="shots">
+              <figure class="shot shot--a">
+                <Image src={dashboard} alt="Panel de empresa de Panalogix con un mapa en vivo, fletes activos y pagos realizados" widths={[440, 880]} sizes="(min-width: 960px) 360px, 70vw" />
+              </figure>
+              <figure class="shot shot--b">
+                <Image src={publicar} alt="Lista de publicaciones de fletes de Panalogix con postulaciones y estado" widths={[320, 640]} sizes="(min-width: 960px) 320px, 60vw" />
+              </figure>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature feature--flip">
+          <div class="feature__text">
+            <h3>Sistema de Verificación Documental</h3>
+            <p class="feature__tagline">Servicio backend que revisa documentos de transportistas con IA</p>
+            <p>
+              Verifica seis documentos regulatorios de transportistas, los valida contra reglas de negocio y devuelve una
+              decisión: aprobado, rechazado o revisión humana. Lo que tomaba de 3 a 5 días hábiles ahora toma segundos.
+            </p>
+            <ul class="chips" aria-label="Tecnologías">
+              <li>Python</li>
+              <li>AWS Lambda</li>
+              <li>SQS y SNS</li>
+              <li>Claude</li>
+              <li>PostgreSQL</li>
+            </ul>
+            <div class="actions">
+              <a class="btn btn--ghost" href={href('proyectos/svd/')}>Ver la arquitectura <Icon name="chevron" /></a>
+              <a class="btn btn--ghost" href="https://github.com/erickAlejandr0/Sistema-de-verificacion-Documental-Panalogix" rel="noopener"><Icon name="github" /> Repositorio</a>
+            </div>
+          </div>
+          <div class="feature__media">
+            <MiniFlow />
+          </div>
+        </article>
+
+        <article class="feature">
+          <div class="feature__text">
+            <h3>Sistema de Monitoreo de Incendios</h3>
+            <p class="feature__tagline">Prototipo IoT que clasifica el riesgo de incendio</p>
+            <p>
+              Dos nodos ESP32 miden temperatura, humo y llama. Un modelo de IA clasifica el riesgo en tres niveles y el
+              sistema envía alertas automáticas por Telegram y ThingsBoard. Lideré el equipo.
+            </p>
+            <ul class="chips" aria-label="Tecnologías">
+              <li>ESP32</li>
+              <li>MQTT con TLS</li>
+              <li>FastAPI</li>
+              <li>Edge Impulse</li>
+              <li>ThingsBoard</li>
+              <li>Docker</li>
+            </ul>
+            <div class="actions">
+              <a class="btn btn--ghost" href={href('proyectos/firemonitor/')}>Ver el proyecto <Icon name="chevron" /></a>
+              <a class="btn btn--ghost" href="https://github.com/erickAlejandr0/FireMonitorSystem-API" rel="noopener"><Icon name="github" /> Repositorio</a>
+            </div>
+          </div>
+          <div class="feature__media">
+            <div class="shots">
+              <figure class="shot shot--a">
+                <Image src={fmDashboard} alt="Panel de ThingsBoard con las lecturas de dos nodos, gráficas de temperatura, humo y riesgo de incendio" widths={[440, 880]} sizes="(min-width: 960px) 360px, 70vw" />
+              </figure>
+              <figure class="shot shot--b">
+                <Image src={fmAlarmas} alt="Lista de alarmas activas por severidad en ThingsBoard" widths={[320, 640]} sizes="(min-width: 960px) 320px, 60vw" />
+              </figure>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Otros proyectos -->
+  <section class="section" aria-labelledby="otros-t">
+    <div class="container">
+      <div class="section-head">
+        <h2 id="otros-t" class="grad">Otros proyectos</h2>
+      </div>
+      <div class="rows">
+        {otros.map((p) => (
+          <article class="row">
+            <div class="row__main">
+              <h3>{p.name}</h3>
+              {p.repo && (
+                <a class="row__link" href={p.repo} rel="noopener">Ver el repositorio <Icon name="arrow-up-right" /></a>
+              )}
+            </div>
+            <div style="display:grid;gap:.9rem">
+              <p>{p.text}</p>
+              <ul class="chips" aria-label="Tecnologías">
+                {p.stack.map((s) => <li>{s}</li>)}
+              </ul>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Trayectoria -->
+  <section id="trayectoria" class="section" aria-labelledby="tray-t" style="scroll-margin-top: 5rem">
+    <div class="container">
+      <div class="section-head">
+        <h2 id="tray-t" class="grad">Trayectoria</h2>
+      </div>
+      <ol class="timeline">
+        {trayectoria.map((t) => (
+          <li class={`timeline__item ${t.now ? 'timeline__item--now' : ''}`}>
+            <span class="timeline__when">{t.when}</span>
+            <h3>{t.title}</h3>
+            {t.text && <p>{t.text}</p>}
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- Contacto -->
+  <section id="contacto" class="section" aria-labelledby="contacto-t" style="scroll-margin-top: 5rem">
+    <div class="container">
+      <div class="contact">
+        <h2 id="contacto-t" class="grad"><em class="serif">Hablemos</em></h2>
+        <p>Si tienes una vacante, una práctica o un proyecto en mente, escríbeme.</p>
+        <div class="actions">
+          {email && <a class="btn btn--primary" href={`mailto:${email}`}><Icon name="mail" /> Escribirme</a>}
+          {linkedin && <a class="btn btn--ghost" href={linkedin} rel="noopener"><Icon name="linkedin" /> LinkedIn</a>}
+          {github && (
+            <a class={`btn ${email ? 'btn--ghost' : 'btn--primary'}`} href={github} rel="noopener"><Icon name="github" /> GitHub</a>
+          )}
+          {cv && <a class="btn btn--ghost" href={href(cv)}><Icon name="file" /> Descargar CV</a>}
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,116 @@
+---
+// Escala de riesgo del sistema y una lectura real de la captura del panel (ESP32_2).
+const niveles = [
+  { name: 'Seguro', range: 'menos de 20 %', color: 'var(--ok)' },
+  { name: 'Alerta', range: 'de 20 a 60 %', color: 'var(--warn)' },
+  { name: 'Crítico', range: 'más de 60 %', color: '#C9707F' },
+];
+---
+
+<div class="risk" role="group" aria-label="Niveles de riesgo de incendio y una lectura de ejemplo">
+  <p class="risk__title">Riesgo de incendio</p>
+  <ol class="risk__scale">
+    {niveles.map((n) => (
+      <li style={`--c:${n.color}`}>
+        <span class="risk__bar" aria-hidden="true"></span>
+        <strong>{n.name}</strong>
+        <span>{n.range}</span>
+      </li>
+    ))}
+  </ol>
+  <div class="risk__read">
+    <p class="risk__label">Una lectura del nodo 2, tomada del panel</p>
+    <dl>
+      <div><dt>Temperatura</dt><dd>57,7 °C</dd></div>
+      <div><dt>Humo (MQ-2)</dt><dd>1924</dd></div>
+      <div><dt>Riesgo</dt><dd class="risk__hot">64,4 %</dd></div>
+    </dl>
+    <p class="risk__state"><span aria-hidden="true"></span>Estado: Crítico</p>
+  </div>
+</div>
+
+<style>
+  .risk {
+    display: grid;
+    gap: 1.2rem;
+    padding: 1.5rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+  .risk__title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    color: var(--text);
+  }
+  .risk__scale {
+    display: grid;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .risk__scale li {
+    display: grid;
+    grid-template-columns: 0.5rem 5rem 1fr;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .risk__scale strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .risk__bar {
+    align-self: stretch;
+    border-radius: 99px;
+    background: var(--c);
+  }
+  .risk__read {
+    display: grid;
+    gap: 0.7rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--line);
+  }
+  .risk__label {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .risk dl {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+    margin: 0;
+  }
+  .risk dt {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .risk dd {
+    margin: 0.15rem 0 0;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--text);
+  }
+  .risk dd.risk__hot {
+    color: #C9707F;
+  }
+  .risk__state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #E0A0AA;
+    font-weight: 600;
+  }
+  .risk__state span {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: #C9707F;
+  }
+</style>

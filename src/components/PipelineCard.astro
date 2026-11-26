@@ -1,0 +1,47 @@
+---
+// Simulación ilustrativa del flujo de verificación de SVD.
+// Es el único movimiento automático del sitio: se reproduce una vez al cargar.
+const steps = [
+  { title: 'Documento recibido', detail: 'Subida directa a S3 con URL firmada' },
+  { title: 'En cola', detail: 'SQS absorbe los picos de carga' },
+  { title: 'Lectura con IA', detail: 'Modelo económico primero; escala si la confianza es baja' },
+  { title: 'Reglas de negocio', detail: 'Vigencia, identidad del titular y placa' },
+  { title: 'Decisión', detail: 'Resultado enviado a Panalogix por webhook firmado' },
+];
+---
+
+<div class="pipe" role="group" aria-labelledby="pipe-title">
+  <div class="pipe__head">
+    <span class="pipe__title" id="pipe-title">Verificación de un documento</span>
+    <span class="pipe__note">Simulación ilustrativa del flujo de SVD</span>
+  </div>
+
+  <ol class="pipe__steps">
+    {steps.map((s, i) => (
+      <li class="pipe__step" style={`--i:${i}`}>
+        <span class="pipe__dot" aria-hidden="true"></span>
+        <div>
+          <strong>{s.title}</strong>
+          <span>{s.detail}</span>
+        </div>
+      </li>
+    ))}
+  </ol>
+
+  <div class="pipe__scores">
+    <div class="pipe__score">
+      <span>Lectura</span>
+      <div class="pipe__bar" aria-hidden="true"><i style="--w:88%"></i></div>
+    </div>
+    <div class="pipe__score">
+      <span>Autenticidad</span>
+      <div class="pipe__bar" aria-hidden="true"><i style="--w:82%"></i></div>
+    </div>
+  </div>
+
+  <div class="pipe__result" aria-label="Resultados posibles">
+    <span class="pipe__chip pipe__chip--on">Aprobado</span>
+    <span class="pipe__chip">Revisión manual</span>
+    <span class="pipe__chip">Rechazado</span>
+  </div>
+</div>

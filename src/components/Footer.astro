@@ -1,0 +1,14 @@
+---
+import { href, site } from '../data/site';
+const year = new Date().getFullYear();
+---
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <p>© {year} {site.name}. Hecho con Astro.</p>
+    <p class="footer__links">
+      <a href={href('#proyectos')}>Proyectos</a>
+      {site.links.github && <>{' '}<a href={site.links.github} rel="noopener">GitHub</a></>}
+    </p>
+  </div>
+</footer>

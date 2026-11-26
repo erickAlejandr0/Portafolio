@@ -1,0 +1,190 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import { href } from '../../data/site';
+import dashboard from '../../assets/panalogix/dashboard.png';
+import publicaciones from '../../assets/panalogix/publicaciones.png';
+import entregas from '../../assets/panalogix/entregas.png';
+import registro from '../../assets/panalogix/registro.png';
+import landing from '../../assets/panalogix/landing.png';
+
+const flujo = [
+  {
+    title: 'La empresa publica un flete',
+    text: 'Define origen y destino en el mapa y el pago queda retenido en custodia (escrow) con Stripe.',
+  },
+  {
+    title: 'Un transportista lo acepta',
+    text: 'El transportista aplica al flete y la empresa le asigna el viaje.',
+  },
+  {
+    title: 'El viaje avanza por fases',
+    text: 'Cada cambio de fase exige condiciones: cercanía geográfica, una lista de verificación y un código de un solo uso (OTP).',
+  },
+  {
+    title: 'La entrega se confirma y se libera el pago',
+    text: 'Con la entrega verificada, el pago llega al transportista mediante Stripe Connect.',
+  },
+];
+
+const incluye = [
+  'Registro con correo y con Google, con onboarding distinto para empresas y transportistas.',
+  'Publicación de fletes con geocodificación en Mapbox y pago en custodia.',
+  'Panel de empresa con mapa en vivo y notificaciones en tiempo real con Ably.',
+  'Inspección de la carga, códigos de verificación y resúmenes de entrega.',
+  'Facturación con tarjeta para empresas y Stripe Connect para transportistas.',
+  'Catálogos de vehículos y de tipos de carga.',
+  'Endpoints de simulación para pruebas de calidad y pruebas unitarias del dominio.',
+];
+
+const stack = ['Next.js 16', 'React 19', 'TypeScript', 'Tailwind CSS', 'PostgreSQL y PostGIS', 'Drizzle ORM', 'Stripe', 'Mapbox', 'Ably'];
+---
+
+<Base
+  title="Panalogix, marketplace de carga terrestre | Erick Bellido"
+  description="Panalogix digitaliza el ciclo completo de un flete en Panamá: publicación, asignación, viaje, entrega y pago en custodia."
+>
+  <section class="pagehead">
+    <div class="hero__glow" aria-hidden="true"></div>
+    <div class="container">
+      <div class="pagehead__copy">
+        <a class="crumb" href={href('#proyectos')}><Icon name="chevron" /> Proyectos</a>
+        <h1 class="grad">Panalogix</h1>
+        <p class="lead">
+          Plataforma que digitaliza el ciclo completo de un flete en Panamá: publicación, asignación, viaje, entrega y pago.
+        </p>
+        <dl class="meta">
+          <div>
+            <dt>Estado</dt>
+            <dd>Prototipo funcional avanzado (MVP técnico)</dd>
+          </div>
+          <div>
+            <dt>Plataformas</dt>
+            <dd>Web. La app iOS se desarrolla en un repositorio aparte.</dd>
+          </div>
+          <div>
+            <dt>Mercado</dt>
+            <dd>Transporte de carga terrestre en Panamá</dd>
+          </div>
+        </dl>
+        <ul class="chips" aria-label="Tecnologías">
+          {stack.map((s) => <li>{s}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="doc"><div class="container">
+    <section class="block" aria-labelledby="problema">
+      <h2 id="problema" class="grad">El problema</h2>
+      <div class="prose">
+        <p>
+          En Panamá, gran parte del flete se coordina por WhatsApp y llamadas telefónicas. Esa informalidad deja a las empresas sin
+          visibilidad de la carga, expone los pagos a riesgo y vuelve ineficiente encontrar al transportista adecuado.
+        </p>
+        <p>
+          Panalogix convierte ese proceso en un flujo digital con un pago que solo se libera cuando la entrega queda verificada.
+        </p>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="flujo">
+      <h2 id="flujo" class="grad">Cómo funciona un flete</h2>
+      <ol class="steps steps--2">
+        {flujo.map((s) => (
+          <li>
+            <h3>{s.title}</h3>
+            <p>{s.text}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="block" aria-labelledby="pantallas">
+      <h2 id="pantallas" class="grad">Pantallas</h2>
+      <div class="gallery">
+        <figure class="gallery__wide">
+          <div class="shot">
+            <Image src={dashboard} alt="Panel de empresa de Panalogix con un mapa en vivo, indicadores de fletes y pagos, y la tabla de fletes activos" widths={[800, 1200, 1800]} sizes="(min-width: 820px) 832px, 100vw" />
+          </div>
+          <figcaption>Panel de empresa: mapa en vivo, fletes creados, pagos y fletes activos con su estado.</figcaption>
+        </figure>
+        <figure>
+          <div class="shot">
+            <Image src={publicaciones} alt="Lista de publicaciones de fletes con postulaciones, estado y acciones" widths={[540, 1080, 1800]} sizes="(min-width: 820px) 540px, 100vw" />
+          </div>
+          <figcaption>Publicaciones de la empresa, con postulaciones y estado de cada flete.</figcaption>
+        </figure>
+        <figure>
+          <div class="shot">
+            <Image src={entregas} alt="Pantalla de entregas con contadores por estado, pestañas y la lista de entregas" widths={[540, 1080, 1800]} sizes="(min-width: 820px) 540px, 100vw" />
+          </div>
+          <figcaption>Entregas en vivo, filtradas por estado: por recoger, en camino, en destino o canceladas.</figcaption>
+        </figure>
+        <figure>
+          <div class="shot">
+            <Image src={registro} alt="Pantalla de registro con la elección entre cuenta de transportista o de empresa y acceso con Google" widths={[540, 1080, 1440]} sizes="(min-width: 820px) 540px, 100vw" />
+          </div>
+          <figcaption>Registro según el tipo de cuenta: transportista o empresa.</figcaption>
+        </figure>
+        <figure>
+          <div class="shot">
+            <Image src={landing} alt="Página de inicio pública de Panalogix con el titular, los botones de acción y una vista previa de la plataforma" widths={[540, 1080, 1400]} sizes="(min-width: 820px) 540px, 100vw" />
+          </div>
+          <figcaption>Página de inicio pública de la plataforma.</figcaption>
+        </figure>
+      </div>
+      <p class="muted gallery__note">Las capturas usan datos de demostración.</p>
+    </section>
+
+    <section class="block" aria-labelledby="incluye">
+      <h2 id="incluye" class="grad">Qué incluye hoy</h2>
+      <ul class="points">
+        {incluye.map((i) => <li>{i}</li>)}
+      </ul>
+    </section>
+
+    <section class="block" aria-labelledby="decisiones">
+      <h2 id="decisiones" class="grad">Decisiones técnicas</h2>
+      <div class="decisions">
+        <div>
+          <h3>Código en capas</h3>
+          <p>Rutas y API, Server Actions, lógica de negocio, acceso a datos y utilidades de dominio, cada una con una responsabilidad clara.</p>
+        </div>
+        <div>
+          <h3>La geografía vive en la base de datos</h3>
+          <p>PostgreSQL con PostGIS y Drizzle ORM para las consultas espaciales y las migraciones.</p>
+        </div>
+        <div>
+          <h3>Reglas que gobiernan el viaje</h3>
+          <p>Las transiciones entre fases dependen de cercanía, lista de verificación y OTP, así que un viaje no avanza sin evidencia.</p>
+        </div>
+        <div>
+          <h3>Dominio con pruebas</h3>
+          <p>Las reglas del dominio tienen pruebas unitarias con el ejecutor de pruebas nativo de Node.js.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="siguiente">
+      <h2 id="siguiente" class="grad">Lo que sigue</h2>
+      <div class="prose">
+        <p>
+          Endurecer el sistema para producción (límites de uso, observabilidad y CI/CD completo), cumplimiento KYC y AML, pagos
+          nativos en Panamá, emparejamiento avanzado y una app Android.
+        </p>
+      </div>
+    </section>
+
+    <section class="block" aria-label="Siguiente proyecto" style="padding-bottom: clamp(4rem, 8vw, 6rem)">
+      <div class="nextlink">
+        <div>
+          <h2>Sistema de Verificación Documental</h2>
+          <p>El servicio que revisa con IA los documentos de los transportistas de Panalogix.</p>
+        </div>
+        <a class="btn btn--primary" href={href('proyectos/svd/')}>Ver la arquitectura <Icon name="chevron" /></a>
+      </div>
+    </section>
+  </div></div>
+</Base>

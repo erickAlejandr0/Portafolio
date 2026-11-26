@@ -1,0 +1,22 @@
+---
+// Versión resumida del flujo de SVD para la tarjeta del inicio.
+const rows = [
+  { name: 'S3 y SQS', text: 'Recibe el documento y lo pone en cola', kind: '' },
+  { name: 'Lambda Worker', text: 'Extrae, aplica reglas y calcula dos puntajes', kind: '' },
+  { name: 'Claude', text: 'Haiku por defecto; Sonnet cuando la confianza baja', kind: 'ai' },
+  { name: 'SNS y webhook', text: 'Entrega la decisión a Panalogix', kind: 'ok' },
+];
+---
+
+<div class="miniflow">
+  {rows.map((r, i) => (
+    <>
+      {i > 0 && <span class="miniflow__join" aria-hidden="true"></span>}
+      <div class={`miniflow__row ${r.kind ? `miniflow__row--${r.kind}` : ''}`}>
+        <b>{r.name}</b>
+        <span>{r.text}</span>
+      </div>
+    </>
+  ))}
+  <p class="miniflow__note">Flujo simplificado. El detalle completo está en la página del proyecto.</p>
+</div>
