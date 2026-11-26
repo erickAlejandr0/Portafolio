@@ -138,9 +138,11 @@ const stack = ['Python 3.12', 'AWS Lambda', 'API Gateway', 'S3', 'SQS y SNS', 'E
       <h2 id="construccion" class="grad">Cómo lo construí</h2>
       <div class="prose">
         <p>
-          Usé IA también para desarrollar. Un agente de código en Cursor escribía las piezas, y Claude las revisaba con una lista
-          fija: idempotencia, manejo de errores, aislamiento de secretos y mínimo privilegio. Las pruebas son unitarias, de
-          integración y de contrato.
+          
+          Partí de una arquitectura definida por mí y usé IA para ejecutarla. Un agente de código en Cursor generó las piezas, incluido 
+          el motor de reglas, a partir de prompts estructurados. Claude las revisó con una lista fija (idempotencia, manejo de 
+          errores, aislamiento de secretos y mínimo privilegio). Las pruebas son unitarias, de integración y de contrato.
+          
         </p>
       </div>
     </section>
